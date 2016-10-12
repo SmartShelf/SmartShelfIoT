@@ -87,16 +87,3 @@ function weight(){
 }
 
 
-/*
-var weight = function() {
-  var unitsRecorded = scale.getUnits();
-
-  //a huge number is recorded in sensor goes below the calibrated zero, this code just makes it zero.
-  if (unitsRecorded > 500000) {
-    unitsRecorded = 0;
-      console.log("weight : "+unitsRecorded);
-  }
-};
-
-*/
-
