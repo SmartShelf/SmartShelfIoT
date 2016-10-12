@@ -65,11 +65,38 @@ console.log('MRAA Version: ' + mraa.getVersion()); //write the mraa version to t
 var hx711 = require('jsupm_hx711');// Instantiate a HX711 data on digital pin D3 and clock on digital pin D2
 var scale = new hx711.HX711(3, 2);
 
+setTimeout(function(){
+	// 2837: value obtained via calibration
+	//scale.setScale(5837);
+    scale.setScale(8000);
+	scale.tare(2);
+	setInterval(function(){
+        weight();
+	}, 1000);
+}, 1000);
+
+function weight(){
+    var unitsRecorded = scale.getUnits();
+        //a huge number is recorded in sensor goes below the calibrated zero, this code just makes it zero.
+        if (unitsRecorded > 500000) {
+            unitsRecorded = 0;
+        }
+		console.log("weight : "+unitsRecorded);
+    
+    return unitsRecorded;
+}
+
+
+/*
 var weight = function() {
   var unitsRecorded = scale.getUnits();
 
   //a huge number is recorded in sensor goes below the calibrated zero, this code just makes it zero.
   if (unitsRecorded > 500000) {
     unitsRecorded = 0;
+      console.log("weight : "+unitsRecorded);
   }
-}
+};
+
+*/
+
