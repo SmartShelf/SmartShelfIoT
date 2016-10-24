@@ -8,6 +8,7 @@ ID
 AUTHTOKEN
 */
 
+var DeviceID = "SMARTSHELF1234"
 var ORG = 'm6f8l5';
 var TYPE = 'SmartScale';
 var ID = 'SmartScale-001';
@@ -41,7 +42,7 @@ console.log(TOPIC);
 client.on('connect', function () {
   setInterval(function(){
     client.publish(TOPIC, '{"d":{"weight":' + weight() + '}}');//Payload is JSON
-  }, 2000);//Keeps publishing every 2000 milliseconds.
+  }, 5000);//Keeps publishing every 2000 milliseconds.
 });
 
 /*
@@ -60,30 +61,96 @@ Article: https://software.intel.com/en-us/html5/articles/intel-xdk-iot-edition-n
 */
 
 var mraa = require('mraa'); //require mraa
+
+var http = require('http');
+var querystring = require('querystring');
+
 console.log('MRAA Version: ' + mraa.getVersion()); //write the mraa version to the console
 
 var hx711 = require('jsupm_hx711');// Instantiate a HX711 data on digital pin D3 and clock on digital pin D2
-var scale = new hx711.HX711(3, 2);
+var scale1 = new hx711.HX711(3, 2);
+var scale2 = new hx711.HX711(7, 6);
 
 setTimeout(function(){
+    
 	// 2837: value obtained via calibration
 	//scale.setScale(5837);
-    scale.setScale(8000);
-	scale.tare(2);
+    scale1.setScale(8000);
+	scale1.tare(2);
+    scale2.setScale(8000);
+	scale2.tare(2);
 	setInterval(function(){
-        weight();
-	}, 1000);
-}, 1000);
+        weight(scale1);
+//        weight(scale2);
+        sendApi();
+        
+	}, 5000);
+    
+}, 5000);
 
-function weight(){
-    var unitsRecorded = scale.getUnits();
+    var unitsRecorded;
+    var unitsRecorded2;
+
+function weight(s){
+    unitsRecorded = scale1.getUnits();
+    unitsRecorded2 = scale2.getUnits();
         //a huge number is recorded in sensor goes below the calibrated zero, this code just makes it zero.
         if (unitsRecorded > 500000) {
             unitsRecorded = 0;
         }
-		console.log("weight : "+unitsRecorded);
+    if (unitsRecorded2 > 500000) {
+            unitsRecorded2 = 0;
+        }
+		console.log("weight 1: "+unitsRecorded);
+     	console.log("weight 2: "+unitsRecorded2);
     
     return unitsRecorded;
 }
+
+function sendApi(){
+    
+    var weightUpdateUrl='/main/weightsUpdate/SS1234?scale1='+scale1.getUnits()+'&scale2='+scale2.getUnits();
+    console.log(weightUpdateUrl);
+    var options = {
+      host: 'smartshelf.mybluemix.net',
+//      port: '8080',
+      path: weightUpdateUrl ,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    var callback = function(response){
+    
+        var str='';
+        response.setEncoding('utf8');
+        response.on('data',function(chunk){
+            str+=chunk;
+            console.log('chunk : '+chunk);
+        });
+
+        response.on('end', function(){
+            console.log(str);
+        });
+    };
+    
+////     var d = querystring.stringify({"scale1": scale1.getUnits(), "scale2":scale2.getUnits()});
+        var req = http.request(options,callback);
+//        //req.write(d);
+        req.end();
+//    
+}
+
+
+
+//READ SCALE INFO
+
+
+//GET DATA FROM API
+
+
+//SEND DATA TO WATSON
+
 
 
