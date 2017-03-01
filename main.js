@@ -111,7 +111,6 @@ function weight(s){
 }
 
 function sendApi(){
-    
     var weightUpdateUrl='/main/weightsUpdate/SS1234?scale1='+scale1.getUnits()+'&scale2='+scale2.getUnits();
     console.log(weightUpdateUrl);
     var options = {
@@ -125,14 +124,14 @@ function sendApi(){
     };
     
     var callback = function(response){
-    
+        pin12LedState = !pin12LedState;
+        pin12Led.write(pin12LedState?1:0);
+        console.log("callback ledstate"+pin12LedState);
         var str='';
         response.setEncoding('utf8');
         response.on('data',function(chunk){
             str+=chunk;
             console.log('chunk : '+chunk);
-            pin12LedState = !pin12LedState;
-            pin12Led.write(pin12LedState?0:1);
         });
 
         response.on('end', function(){
@@ -142,6 +141,7 @@ function sendApi(){
     
 ////     var d = querystring.stringify({"scale1": scale1.getUnits(), "scale2":scale2.getUnits()});
         var req = http.request(options,callback);
+
 //        //req.write(d);
         req.end();
 //    
@@ -156,6 +156,5 @@ function sendApi(){
 
 
 //SEND DATA TO WATSON
-
 
 
