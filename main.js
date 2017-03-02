@@ -70,21 +70,24 @@ console.log('MRAA Version: ' + mraa.getVersion()); //write the mraa version to t
 var hx711 = require('jsupm_hx711');// Instantiate a HX711 data on digital pin D3 and clock on digital pin D2
 var scale1 = new hx711.HX711(3, 2);
 var scale2 = new hx711.HX711(7, 6);
+var pin12Led = new mraa.Gpio(12);
+    pin12Led.dir(mraa.DIR_OUT); // configure the LED gpio as an output
+var pin12LedState = false;
 
 setTimeout(function(){
     
-	// 2837: value obtained via calibration
-	//scale.setScale(5837);
+    // 2837: value obtained via calibration
+    //scale.setScale(5837);
     scale1.setScale(8000);
-	scale1.tare(2);
+    scale1.tare(2);
     scale2.setScale(8000);
-	scale2.tare(2);
-	setInterval(function(){
+    scale2.tare(2);
+    setInterval(function(){
         weight(scale1);
 //        weight(scale2);
         sendApi();
         
-	}, 5000);
+    }, 5000);
     
 }, 5000);
 
@@ -101,14 +104,13 @@ function weight(s){
     if (unitsRecorded2 > 500000) {
             unitsRecorded2 = 0;
         }
-		console.log("weight 1: "+unitsRecorded);
-     	console.log("weight 2: "+unitsRecorded2);
+        console.log("weight 1: "+unitsRecorded);
+        console.log("weight 2: "+unitsRecorded2);
     
     return unitsRecorded;
 }
 
 function sendApi(){
-    
     var weightUpdateUrl='/main/weightsUpdate/SS1234?scale1='+scale1.getUnits()+'&scale2='+scale2.getUnits();
     console.log(weightUpdateUrl);
     var options = {
@@ -122,7 +124,9 @@ function sendApi(){
     };
     
     var callback = function(response){
-    
+        pin12LedState = !pin12LedState;
+        pin12Led.write(pin12LedState?1:0);
+        console.log("callback ledstate"+pin12LedState);
         var str='';
         response.setEncoding('utf8');
         response.on('data',function(chunk){
@@ -137,6 +141,7 @@ function sendApi(){
     
 ////     var d = querystring.stringify({"scale1": scale1.getUnits(), "scale2":scale2.getUnits()});
         var req = http.request(options,callback);
+
 //        //req.write(d);
         req.end();
 //    
@@ -151,6 +156,5 @@ function sendApi(){
 
 
 //SEND DATA TO WATSON
-
 
 
